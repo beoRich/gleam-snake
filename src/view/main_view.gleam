@@ -1,20 +1,16 @@
 import gleam/float
-import gleam/int
 import gleam/list
 import gleam/option
-import gleam/string
 import tiramisu
 import tiramisu/camera
-import tiramisu/geometry
 import tiramisu/light
-import tiramisu/material
 import tiramisu/scene
 import tiramisu/transform
 import vec/vec3
 import view/bg_view
 import view/running_game_view
 
-import snake_types.{type Model, Running, box_width}
+import snake_types.{type Model, Running}
 
 pub fn view(
   model: Model,
@@ -26,7 +22,6 @@ pub fn view(
       height: float.round(ctx.canvas_height),
     )
 
-  let head_position = vec3.Vec3(model.head.x, model.head.y, 0.0)
   let init_elements = [
     scene.camera(
       id: "camera",

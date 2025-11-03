@@ -6,6 +6,7 @@ import tiramisu/scene
 import tiramisu/transform
 import vec/vec3
 
+import snake_global
 import snake_types.{box_width}
 
 pub fn create_static_view(
@@ -23,7 +24,7 @@ pub fn create_static_view(
   let assert Ok(vertical_border_geometry) =
     geometry.box(
       width: box_width /. 5.0,
-      height: ctx.canvas_height -. 6.0 *. box_width,
+      height: ctx.canvas_height -. 2.0 *. snake_global.horz_border_dist(),
       depth: 1.0,
     )
   [
@@ -33,7 +34,7 @@ pub fn create_static_view(
       material: border_material,
       transform: transform.at(position: vec3.Vec3(
         0.0,
-        0.0 +. ctx.canvas_height /. 2.0 -. 3.0 *. box_width,
+        snake_global.upper_border(ctx),
         0.0,
       )),
       physics: option.None,
@@ -44,7 +45,7 @@ pub fn create_static_view(
       material: border_material,
       transform: transform.at(position: vec3.Vec3(
         0.0,
-        0.0 -. { ctx.canvas_height /. 2.0 -. 3.0 *. box_width },
+        snake_global.down_border(ctx),
         0.0,
       )),
       physics: option.None,
@@ -55,7 +56,7 @@ pub fn create_static_view(
       geometry: vertical_border_geometry,
       material: border_material,
       transform: transform.at(position: vec3.Vec3(
-        0.0 -. ctx.canvas_width /. 2.0,
+        snake_global.left_border(ctx),
         0.0,
         0.0,
       )),
@@ -67,7 +68,7 @@ pub fn create_static_view(
       geometry: vertical_border_geometry,
       material: border_material,
       transform: transform.at(position: vec3.Vec3(
-        0.0 +. ctx.canvas_width /. 2.0,
+        snake_global.right_border(ctx),
         0.0,
         0.0,
       )),
