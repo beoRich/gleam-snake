@@ -4,7 +4,7 @@ import gleam/int
 import gleam/list
 import gleam/option
 import gleam/string
-import snake_movement
+import snake_model
 import tiramisu
 import tiramisu/background
 import tiramisu/camera
@@ -17,8 +17,7 @@ import tiramisu/transform
 import vec/vec3
 
 import snake_types.{
-  type Model, type Msg, BoxData, Down, Left, Model, Right, Running, Tick, Up,
-  box_width,
+  type Model, type Msg, BoxData, Model, Right, Running, Tick, box_width,
 }
 
 pub fn main() -> Nil {
@@ -26,7 +25,7 @@ pub fn main() -> Nil {
     dimensions: option.None,
     background: background.Color(0x162b1e),
     init: init,
-    update: update,
+    update: snake_model.update,
     view: view,
   )
 }
@@ -46,76 +45,6 @@ fn init(
     effect.tick(Tick),
     option.None,
   )
-}
-
-fn update(
-  model: Model,
-  msg: Msg,
-  ctx: tiramisu.Context(String),
-) -> #(Model, Effect(Msg), option.Option(_)) {
-  case msg {
-    Tick -> {
-      let new_time = ctx.delta_time
-      let new_direction =
-        snake_movement.parse_direction_from_key(ctx, model.head.direction)
-      let is_grefressen = snake_movement.is_gefressen_cal(model)
-
-      let new_beute_pos = case is_grefressen {
-        False -> model.beute_pos
-        _ -> #(
-          int.to_float(int.random(10)) *. box_width,
-          -200.0 +. int.to_float(int.random(10)) *. box_width,
-        )
-      }
-
-      let enhanced_tail = case is_grefressen {
-        False -> model.tail
-        _ -> {
-          let last_element = case model.tail {
-            [] -> model.head
-            [_, ..] -> {
-              let assert Ok(last_element) = list.last(model.tail)
-              last_element
-            }
-          }
-          let new_tail_element = case last_element.direction {
-            Right -> BoxData(..last_element, x: last_element.x -. box_width)
-            Left -> BoxData(..last_element, x: last_element.x +. box_width)
-            Up -> BoxData(..last_element, y: last_element.y -. box_width)
-            Down -> BoxData(..last_element, y: last_element.y +. box_width)
-          }
-          list.append(model.tail, [new_tail_element])
-        }
-      }
-
-      let new_tail =
-        snake_movement.update_tail_pos(
-          model.head,
-          enhanced_tail,
-          model.update_frame,
-        )
-
-      let #(new_x, new_y) =
-        snake_movement.update_head_pos(
-          model.head,
-          model.update_frame,
-          new_direction,
-        )
-
-      #(
-        Model(
-          time: new_time,
-          head: BoxData(x: new_x, y: new_y, direction: new_direction),
-          tail: new_tail,
-          beute_pos: new_beute_pos,
-          update_frame: { model.update_frame + 1 } % 8,
-          game_state: Running,
-        ),
-        effect.tick(Tick),
-        option.None,
-      )
-    }
-  }
 }
 
 fn create_box_cell_mesh(x: Float, y: Float, index: Int) -> scene.Node(String) {
