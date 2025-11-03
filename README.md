@@ -19,6 +19,5 @@ Further documentation can be found at <https://hexdocs.pm/snake_game>.
 ## Development
 
 ```sh
-gleam run   # Run the project
-gleam test  # Run the tests
+gleam run -m lustre/dev start
 ```

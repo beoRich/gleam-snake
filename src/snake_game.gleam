@@ -185,8 +185,6 @@ fn update(
       let #(new_x, new_y) =
         update_head_pos(model.head, model.update_frame, new_direction)
 
-      echo #(new_x, new_y)
-      echo new_tail
       #(
         Model(
           time: new_time,
@@ -280,11 +278,15 @@ fn view(model: Model, ctx: tiramisu.Context(String)) -> List(scene.Node(String))
       )),
       physics: option.None,
     ),
-    ..model.tail
-    |> list.map(fn(tail_element) { #(tail_element.x, tail_element.y) })
-    |> list.index_map(fn(tuple, index) {
-      create_box_cell_mesh(tuple.0, tuple.1, index)
-    })
+    ..tail_elements(model)
   ]
   base_elements
+}
+
+fn tail_elements(model: Model) -> List(scene.Node(String)) {
+  model.tail
+  |> list.map(fn(tail_element) { #(tail_element.x, tail_element.y) })
+  |> list.index_map(fn(tuple, index) {
+    create_box_cell_mesh(tuple.0, tuple.1, index)
+  })
 }
