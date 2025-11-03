@@ -52,17 +52,16 @@ fn check_game_over(model: Model, ctx: tiramisu.Context(String)) -> Bool {
     || hy <. snake_global.down_border(ctx)
 
   let own_tail_check = list.any(model.tail, fn(a) { a.x == hx && a.y == hy })
+  case own_tail_check {
+    True -> echo "Game Over due to own tail crash"
+    _ -> echo ""
+  }
   border_check || own_tail_check
 }
 
 fn update_snake_beute(model: Model, ctx: tiramisu.Context(String)) -> Model {
   let new_time = ctx.delta_time
-  let new_direction =
-    parse_direction_from_key(
-      ctx,
-      model.head.direction,
-      !list.is_empty(model.tail),
-    )
+  let new_direction = parse_direction_from_key(ctx, model)
   let is_grefressen = is_gefressen_cal(model)
 
   let new_beute_pos = case is_grefressen {
@@ -134,38 +133,67 @@ fn update_head_pos(
 
 fn parse_direction_from_key(
   ctx: tiramisu.Context(String),
-  old_direction: Direction,
-  has_tail: Bool,
+  model: Model,
 ) -> Direction {
   let is_left = input.is_key_just_pressed(ctx.input, input.ArrowLeft)
   let is_right = input.is_key_just_pressed(ctx.input, input.ArrowRight)
   let is_up = input.is_key_just_pressed(ctx.input, input.ArrowUp)
   let is_down = input.is_key_just_pressed(ctx.input, input.ArrowDown)
   case is_left, is_right, is_up, is_down {
-    True, _, _, _ -> check_if_new_is_pos(Left, old_direction, has_tail)
-    _, True, _, _ -> check_if_new_is_pos(Right, old_direction, has_tail)
-    _, _, True, _ -> check_if_new_is_pos(Up, old_direction, has_tail)
-    _, _, _, True -> check_if_new_is_pos(Down, old_direction, has_tail)
-    _, _, _, _ -> old_direction
+    True, _, _, _ -> check_if_new_is_pos(Left, model)
+    _, True, _, _ -> check_if_new_is_pos(Right, model)
+    _, _, True, _ -> check_if_new_is_pos(Up, model)
+    _, _, _, True -> check_if_new_is_pos(Down, model)
+    _, _, _, _ -> model.head.direction
   }
 }
 
-fn check_if_new_is_pos(
-  new_direction: Direction,
-  old_direction: Direction,
-  has_tail: Bool,
-) -> Direction {
-  case has_tail {
-    False -> new_direction
+fn check_if_new_is_pos(new_direction: Direction, model: Model) -> Direction {
+  case list.is_empty(model.tail) {
+    True -> new_direction
     _ -> {
-      case new_direction, old_direction {
-        Right, Left -> old_direction
-        Left, Right -> old_direction
-        Up, Down -> old_direction
-        Down, Up -> old_direction
-        _, _ -> new_direction
+      let assert Ok(first_tail) = list.first(model.tail)
+      let head = model.head
+      let old_direction = head.direction
+      case new_direction {
+        Right ->
+          if_true_old_else(
+            first_tail.x >. head.x && first_tail.y == head.y,
+            old_direction,
+            new_direction,
+          )
+        Left ->
+          if_true_old_else(
+            first_tail.x <. head.x && first_tail.y == head.y,
+            old_direction,
+            new_direction,
+          )
+        Up ->
+          if_true_old_else(
+            first_tail.y <. head.y && first_tail.x == head.x,
+            old_direction,
+            new_direction,
+          )
+        Down ->
+          if_true_old_else(
+            first_tail.y >. head.y && first_tail.x == head.x,
+            old_direction,
+            new_direction,
+          )
+        _ -> new_direction
       }
     }
+  }
+}
+
+fn if_true_old_else(
+  is_true: Bool,
+  old_direction: Direction,
+  new_direction: Direction,
+) -> Direction {
+  case is_true {
+    True -> old_direction
+    False -> new_direction
   }
 }
 
