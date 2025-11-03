@@ -61,7 +61,7 @@ fn update_snake_beute(model: Model, ctx: tiramisu.Context(String)) -> Model {
     parse_direction_from_key(
       ctx,
       model.head.direction,
-      list.length(model.tail) > 0,
+      !list.is_empty(model.tail),
     )
   let is_grefressen = is_gefressen_cal(model)
 
