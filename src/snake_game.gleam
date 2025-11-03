@@ -4,43 +4,21 @@ import gleam/int
 import gleam/list
 import gleam/option
 import gleam/string
+import snake_movement
 import tiramisu
 import tiramisu/background
 import tiramisu/camera
 import tiramisu/effect.{type Effect}
 import tiramisu/geometry
-import tiramisu/input
 import tiramisu/light
 import tiramisu/material
 import tiramisu/scene
 import tiramisu/transform
 import vec/vec3
 
-const box_width = 50.0
-
-pub type Model {
-  Model(
-    time: Float,
-    head: BoxData,
-    tail: List(BoxData),
-    beute_pos: #(Float, Float),
-    update_frame: Int,
-  )
-}
-
-pub type BoxData {
-  BoxData(x: Float, y: Float, direction: Direction)
-}
-
-pub type Direction {
-  Right
-  Left
-  Up
-  Down
-}
-
-pub type Msg {
-  Tick
+import snake_types.{
+  type Model, type Msg, BoxData, Down, Left, Model, Right, Running, Tick, Up,
+  box_width,
 }
 
 pub fn main() -> Nil {
@@ -63,81 +41,11 @@ fn init(
       tail: [],
       beute_pos: #(0.0, 0.0),
       update_frame: 0,
+      game_state: Running,
     ),
     effect.tick(Tick),
     option.None,
   )
-}
-
-fn parse_direction_from_key(
-  ctx: tiramisu.Context(String),
-  old_direction: Direction,
-) -> Direction {
-  let is_left = input.is_key_just_pressed(ctx.input, input.ArrowLeft)
-  let is_right = input.is_key_just_pressed(ctx.input, input.ArrowRight)
-  let is_up = input.is_key_just_pressed(ctx.input, input.ArrowUp)
-  let is_down = input.is_key_just_pressed(ctx.input, input.ArrowDown)
-  case is_left, is_right, is_up, is_down {
-    True, _, _, _ -> Left
-    _, True, _, _ -> Right
-    _, _, True, _ -> Up
-    _, _, _, True -> Down
-    _, _, _, _ -> old_direction
-  }
-}
-
-fn is_gefressen_cal(model: Model) -> Bool {
-  let threshold = 30.5
-  let BoxData(hx, hy, _) = model.head
-  let #(bx, by) = model.beute_pos
-  float.absolute_value(hx -. bx) <. threshold
-  && float.absolute_value(hy -. by) <. threshold
-}
-
-fn update_head_pos(
-  box_data: BoxData,
-  update_frame: Int,
-  direction: Direction,
-) -> #(Float, Float) {
-  let update_movement = update_frame == 0
-
-  let horizontal_mov = case direction {
-    Right -> box_width
-    Left -> float.negate(box_width)
-    _ -> 0.0
-  }
-
-  let vertical_mov = case direction {
-    Up -> box_width
-    Down -> float.negate(box_width)
-    _ -> 0.0
-  }
-  case update_movement {
-    True -> #(box_data.x +. horizontal_mov, box_data.y +. vertical_mov)
-    False -> #(box_data.x, box_data.y)
-  }
-}
-
-fn update_tail_pos(
-  head_pos: BoxData,
-  tail_pos: List(BoxData),
-  update_frame: Int,
-) -> List(BoxData) {
-  let update_movement = update_frame == 0
-  let new_tail = case tail_pos {
-    [] -> tail_pos
-    [_] -> [head_pos]
-    _ ->
-      list.append(
-        [head_pos],
-        list.reverse(tail_pos) |> list.drop(1) |> list.reverse,
-      )
-    //todo
-  }
-  case update_movement {
-    True -> new_tail
-    False -> tail_pos
-  }
 }
 
 fn update(
@@ -148,8 +56,9 @@ fn update(
   case msg {
     Tick -> {
       let new_time = ctx.delta_time
-      let new_direction = parse_direction_from_key(ctx, model.head.direction)
-      let is_grefressen = is_gefressen_cal(model)
+      let new_direction =
+        snake_movement.parse_direction_from_key(ctx, model.head.direction)
+      let is_grefressen = snake_movement.is_gefressen_cal(model)
 
       let new_beute_pos = case is_grefressen {
         False -> model.beute_pos
@@ -180,10 +89,18 @@ fn update(
       }
 
       let new_tail =
-        update_tail_pos(model.head, enhanced_tail, model.update_frame)
+        snake_movement.update_tail_pos(
+          model.head,
+          enhanced_tail,
+          model.update_frame,
+        )
 
       let #(new_x, new_y) =
-        update_head_pos(model.head, model.update_frame, new_direction)
+        snake_movement.update_head_pos(
+          model.head,
+          model.update_frame,
+          new_direction,
+        )
 
       #(
         Model(
@@ -192,6 +109,7 @@ fn update(
           tail: new_tail,
           beute_pos: new_beute_pos,
           update_frame: { model.update_frame + 1 } % 8,
+          game_state: Running,
         ),
         effect.tick(Tick),
         option.None,
@@ -225,6 +143,15 @@ fn view(model: Model, ctx: tiramisu.Context(String)) -> List(scene.Node(String))
       width: float.round(ctx.canvas_width),
       height: float.round(ctx.canvas_height),
     )
+  let assert Ok(horizontal_border_geometry) =
+    geometry.box(width: ctx.canvas_width, height: box_width /. 5.0, depth: 1.0)
+
+  let assert Ok(vertical_border_geometry) =
+    geometry.box(
+      width: box_width /. 5.0,
+      height: ctx.canvas_height -. 6.0 *. box_width,
+      depth: 1.0,
+    )
   let assert Ok(cube_geometry) =
     geometry.box(width: box_width, height: box_width, depth: 1.0)
   let assert Ok(head_material) =
@@ -234,9 +161,16 @@ fn view(model: Model, ctx: tiramisu.Context(String)) -> List(scene.Node(String))
     |> material.with_roughness(0.9)
     |> material.build()
 
-  let assert Ok(beute_material) =
+  let assert Ok(border_material) =
     material.new()
     |> material.with_color(0xeb4034)
+    |> material.with_metalness(0.2)
+    |> material.with_roughness(0.9)
+    |> material.build()
+
+  let assert Ok(beute_material) =
+    material.new()
+    |> material.with_color(0xfcba03)
     |> material.with_metalness(0.2)
     |> material.with_roughness(0.9)
     |> material.build()
@@ -258,6 +192,54 @@ fn view(model: Model, ctx: tiramisu.Context(String)) -> List(scene.Node(String))
         light
       },
       transform: transform.identity,
+    ),
+
+    scene.mesh(
+      id: "upperLine",
+      geometry: horizontal_border_geometry,
+      material: border_material,
+      transform: transform.at(position: vec3.Vec3(
+        0.0,
+        0.0 +. ctx.canvas_height /. 2.0 -. 3.0 *. box_width,
+        0.0,
+      )),
+      physics: option.None,
+    ),
+
+    scene.mesh(
+      id: "downLine",
+      geometry: horizontal_border_geometry,
+      material: border_material,
+      transform: transform.at(position: vec3.Vec3(
+        0.0,
+        0.0 -. { ctx.canvas_height /. 2.0 -. 3.0 *. box_width },
+        0.0,
+      )),
+      physics: option.None,
+    ),
+
+    scene.mesh(
+      id: "leftLine",
+      geometry: vertical_border_geometry,
+      material: border_material,
+      transform: transform.at(position: vec3.Vec3(
+        0.0 -. ctx.canvas_width /. 2.0,
+        0.0,
+        0.0,
+      )),
+      physics: option.None,
+    ),
+
+    scene.mesh(
+      id: "rightLine",
+      geometry: vertical_border_geometry,
+      material: border_material,
+      transform: transform.at(position: vec3.Vec3(
+        0.0 +. ctx.canvas_width /. 2.0,
+        0.0,
+        0.0,
+      )),
+      physics: option.None,
     ),
     scene.mesh(
       id: "snakeHead",
