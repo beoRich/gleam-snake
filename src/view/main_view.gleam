@@ -42,6 +42,7 @@ pub fn view(
   ]
   let base_elements =
     list.append(init_elements, bg_view.create_static_view(ctx))
+    |> list.append(bg_view.create_score_display(model, ctx))
 
   case model.game_state {
     Running -> {

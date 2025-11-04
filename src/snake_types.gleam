@@ -1,3 +1,6 @@
+import gleam/option
+import tiramisu/asset
+
 pub const box_width = 50.0
 
 pub type Model {
@@ -8,6 +11,8 @@ pub type Model {
     beute_pos: #(Float, Float),
     update_frame: Int,
     game_state: GameState,
+    maybe_font: option.Option(asset.Font),
+    score: Int,
   )
 }
 
@@ -29,5 +34,9 @@ pub type Direction {
 }
 
 pub type Msg {
+  FontLoaded(asset.Font)
+  FontLoadFailed(asset.LoadError)
   Tick
 }
+
+pub type FontLoading

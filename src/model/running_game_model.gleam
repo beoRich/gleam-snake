@@ -7,29 +7,11 @@ import snake_types.{
 }
 
 import snake_global
-import tiramisu/effect.{type Effect}
 
 import gleam/list
 
 import tiramisu
 import tiramisu/input
-
-pub fn init(
-  _ctx: tiramisu.Context(String),
-) -> #(Model, Effect(Msg), option.Option(_)) {
-  #(
-    Model(
-      time: 0.0,
-      head: BoxData(x: -450.0, y: 300.0, direction: Right),
-      tail: [],
-      beute_pos: #(0.0, 0.0),
-      update_frame: 0,
-      game_state: Running,
-    ),
-    effect.tick(Tick),
-    option.None,
-  )
-}
 
 pub fn update_running_model(
   model: Model,
@@ -63,6 +45,11 @@ fn update_snake_beute(model: Model, ctx: tiramisu.Context(String)) -> Model {
   let new_time = ctx.delta_time
   let new_direction = parse_direction_from_key(ctx, model)
   let is_grefressen = is_gefressen_cal(model)
+
+  let new_score = case is_grefressen {
+    True -> model.score + 1
+    False -> model.score
+  }
 
   let new_beute_pos = case is_grefressen {
     False -> model.beute_pos
@@ -98,12 +85,14 @@ fn update_snake_beute(model: Model, ctx: tiramisu.Context(String)) -> Model {
     update_head_pos(model.head, model.update_frame, new_direction)
 
   Model(
+    ..model,
     time: new_time,
     head: BoxData(x: new_x, y: new_y, direction: new_direction),
     tail: new_tail,
     beute_pos: new_beute_pos,
     update_frame: { model.update_frame + 1 } % 8,
     game_state: Running,
+    score: new_score,
   )
 }
 
@@ -170,13 +159,13 @@ fn check_if_new_is_pos(new_direction: Direction, model: Model) -> Direction {
           )
         Up ->
           if_true_old_else(
-            first_tail.y <. head.y && first_tail.x == head.x,
+            first_tail.y >. head.y && first_tail.x == head.x,
             old_direction,
             new_direction,
           )
         Down ->
           if_true_old_else(
-            first_tail.y >. head.y && first_tail.x == head.x,
+            first_tail.y <. head.y && first_tail.x == head.x,
             old_direction,
             new_direction,
           )
