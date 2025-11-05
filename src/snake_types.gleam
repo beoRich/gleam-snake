@@ -3,6 +3,8 @@ import tiramisu/asset
 
 pub const box_width = 50.0
 
+pub const highscore_key = "Highscore"
+
 pub type Model {
   Model(
     time: Float,
@@ -13,6 +15,7 @@ pub type Model {
     game_state: GameState,
     maybe_font: option.Option(asset.Font),
     score: Int,
+    highscore: option.Option(Int),
   )
 }
 

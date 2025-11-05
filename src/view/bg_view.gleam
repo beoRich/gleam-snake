@@ -134,11 +134,16 @@ pub fn create_score_display(
     |> material.with_roughness(0.7)
     |> material.build()
   let score_string = string.append("Score: ", int.to_string(model.score))
+  let complete_score = case model.highscore {
+    option.Some(val) ->
+      score_string <> " (Highscore: " <> int.to_string(val) <> ")"
+    _ -> score_string
+  }
   let text_elements = case model.maybe_font {
     option.Some(font) -> {
       let assert Ok(text) =
         geometry.text(
-          text: score_string,
+          text: complete_score,
           font: font,
           size: 36.0,
           depth: 0.2,
@@ -156,7 +161,7 @@ pub fn create_score_display(
           geometry: text,
           material: score_text_material,
           transform: transform.at(position: vec3.Vec3(
-            0.0 -. 100.0,
+            0.0 -. 200.0,
             snake_global.upper_border(ctx)
               +. snake_global.horz_border_dist()
               /. 2.0,

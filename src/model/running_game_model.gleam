@@ -1,8 +1,9 @@
 import gleam/float
 import gleam/int
+import gleam/option
 import snake_types.{
   type BoxData, type Direction, type Model, type Msg, BoxData, Down, GameOver,
-  Left, Model, Right, Running, Tick, Up, box_width,
+  Left, Model, Right, Running, Tick, Up, box_width, highscore_key,
 }
 
 import snake_global
@@ -18,7 +19,26 @@ pub fn update_running_model(
 ) -> Model {
   let is_game_over = check_game_over(model, ctx)
   case is_game_over {
-    True -> Model(..model, game_state: GameOver)
+    True -> {
+      let score = model.score
+      let pot_new_highscore = case model.highscore {
+        option.Some(highscore_val) ->
+          case score > highscore_val {
+            True -> {
+              set_localstorage(highscore_key, int.to_string(score))
+
+              score
+            }
+            _ -> highscore_val
+          }
+        _ -> score
+      }
+      Model(
+        ..model,
+        game_state: GameOver,
+        highscore: option.Some(pot_new_highscore),
+      )
+    }
     False -> update_snake_beute(model, ctx)
   }
 }
@@ -59,7 +79,7 @@ fn calculate_new_beute_pos(
   }
 }
 
-fn random_pos(ctx: tiramisu.Context(String)) -> #(Float, Float) {
+pub fn random_pos(ctx: tiramisu.Context(String)) -> #(Float, Float) {
   let abs_x = ctx.canvas_height -. 2.0 *. box_width
   let rand_x = float.round(abs_x /. box_width) - 1
 
@@ -252,4 +272,9 @@ fn update_tail_pos(
     True -> new_tail
     False -> tail_pos
   }
+}
+
+@external(javascript, "./main_model.ffi.mjs", "set_localstorage")
+fn set_localstorage(_key: String, _value: String) -> Nil {
+  Nil
 }

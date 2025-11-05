@@ -2,6 +2,8 @@ import tiramisu
 
 import snake_types.{box_width}
 
+pub const highscore_key = "Highscore"
+
 pub fn left_border(ctx: tiramisu.Context(String)) -> Float {
   0.0 -. half_vert_calc(ctx)
 }
