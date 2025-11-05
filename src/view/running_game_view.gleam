@@ -1,17 +1,13 @@
-import gleam/float
 import gleam/int
 import gleam/list
 import gleam/option
 import gleam/string
 import tiramisu
-import tiramisu/camera
 import tiramisu/geometry
-import tiramisu/light
 import tiramisu/material
 import tiramisu/scene
 import tiramisu/transform
 import vec/vec3
-import view/bg_view
 
 import snake_types.{type Model, box_width}
 

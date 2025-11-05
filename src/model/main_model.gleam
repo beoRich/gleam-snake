@@ -24,7 +24,7 @@ pub fn init(
   #(
     Model(
       time: 0.0,
-      head: BoxData(x: -450.0, y: 300.0, direction: Right),
+      head: BoxData(x: 0.0, y: 0.0, direction: Right),
       tail: [],
       beute_pos: #(0.0, 0.0),
       update_frame: 0,

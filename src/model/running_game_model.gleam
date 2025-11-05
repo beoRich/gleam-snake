@@ -1,6 +1,5 @@
 import gleam/float
 import gleam/int
-import gleam/option
 import snake_types.{
   type BoxData, type Direction, type Model, type Msg, BoxData, Down, GameOver,
   Left, Model, Right, Running, Tick, Up, box_width,
@@ -36,9 +35,52 @@ fn check_game_over(model: Model, ctx: tiramisu.Context(String)) -> Bool {
   let own_tail_check = list.any(model.tail, fn(a) { a.x == hx && a.y == hy })
   case own_tail_check {
     True -> echo "Game Over due to own tail crash"
-    _ -> echo ""
+    _ -> {
+      ""
+    }
   }
   border_check || own_tail_check
+}
+
+fn calculate_new_beute_pos(
+  model: Model,
+  safety: Int,
+  ctx: tiramisu.Context(String),
+) -> #(Float, Float) {
+  let cand = random_pos(ctx)
+  let test_function = spawn_too_close(_, cand)
+  let too_close =
+    list.append([model.head], model.tail) |> list.any(test_function)
+  case too_close && safety < 5 {
+    True -> {
+      calculate_new_beute_pos(model, safety + 1, ctx)
+    }
+    False -> cand
+  }
+}
+
+fn random_pos(ctx: tiramisu.Context(String)) -> #(Float, Float) {
+  let abs_x = ctx.canvas_height -. 2.0 *. box_width
+  let rand_x = float.round(abs_x /. box_width) - 1
+
+  let abs_y =
+    ctx.canvas_height
+    -. 2.0
+    *. snake_global.horz_border_dist()
+    -. 2.0
+    *. box_width
+  let rand_y = float.round(abs_y /. box_width) - 1
+  let cand = #(
+    int.to_float(int.random(rand_x) - rand_x / 2) *. box_width,
+    int.to_float(int.random(rand_y) - rand_y / 2) *. box_width,
+  )
+  cand
+}
+
+fn spawn_too_close(snake_element: BoxData, cand: #(Float, Float)) -> Bool {
+  let dist_x = float.absolute_value(snake_element.x -. cand.0)
+  let dist_y = float.absolute_value(snake_element.y -. cand.1)
+  dist_x <. 2.0 *. box_width && dist_y <. 2.0 *. box_width
 }
 
 fn update_snake_beute(model: Model, ctx: tiramisu.Context(String)) -> Model {
@@ -53,10 +95,7 @@ fn update_snake_beute(model: Model, ctx: tiramisu.Context(String)) -> Model {
 
   let new_beute_pos = case is_grefressen {
     False -> model.beute_pos
-    _ -> #(
-      int.to_float(int.random(10)) *. box_width,
-      -200.0 +. int.to_float(int.random(10)) *. box_width,
-    )
+    _ -> calculate_new_beute_pos(model, 0, ctx)
   }
 
   let enhanced_tail = case is_grefressen {

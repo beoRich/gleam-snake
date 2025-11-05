@@ -10,7 +10,7 @@ import vec/vec3
 import view/bg_view
 import view/running_game_view
 
-import snake_types.{type Model, Running}
+import snake_types.{type Model, GameOver, Running}
 
 pub fn view(
   model: Model,
@@ -50,6 +50,9 @@ pub fn view(
         base_elements,
         running_game_view.create_running_game_view(model, ctx),
       )
+    }
+    GameOver -> {
+      list.append(base_elements, bg_view.create_game_over(model, ctx))
     }
     _ -> base_elements
   }
