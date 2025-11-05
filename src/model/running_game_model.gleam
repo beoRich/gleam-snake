@@ -2,8 +2,8 @@ import gleam/float
 import gleam/int
 import gleam/option
 import snake_types.{
-  type BoxData, type Direction, type Model, type Msg, BoxData, Down, GameOver,
-  Left, Model, Right, Running, Tick, Up, box_width, highscore_key,
+  type BoxData, type Direction, type Model, BoxData, Down, GameOver, Left, Model,
+  Right, Running, Up, box_width, highscore_key,
 }
 
 import snake_global

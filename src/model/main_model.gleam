@@ -1,5 +1,5 @@
 import gleam/dynamic.{type Dynamic}
-import gleam/dynamic/decode.{type Decoder}
+import gleam/dynamic/decode
 import gleam/javascript/promise
 import gleam/json
 import gleam/option

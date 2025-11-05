@@ -1,5 +1,4 @@
 import gleam/int
-import gleam/list
 import gleam/option
 import gleam/string
 import tiramisu
