@@ -1,3 +1,6 @@
+//// Updates the model. 
+//// Checks if game_over, if beute is eaten, etc. and reacts accordingly
+
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/float
@@ -7,14 +10,12 @@ import gleam/json
 import gleam/list
 import gleam/option
 import gleam/result
-import snake_global
+import snake_global.{box_width}
 import tiramisu/asset
 import tiramisu/effect.{type Effect}
 import tiramisu/input
 
 import tiramisu
-
-pub const box_width = 50.0
 
 pub const highscore_key = "Highscore"
 

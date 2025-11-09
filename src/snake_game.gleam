@@ -1,3 +1,5 @@
+//// Main function and entry point
+
 import gleam/option
 import main_view
 import model_update

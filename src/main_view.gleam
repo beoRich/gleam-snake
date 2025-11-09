@@ -1,9 +1,12 @@
+//// Updates the view: create_static_view (always), then either 
+//// create_gameover() - view or create_running_game() -view 
+//// depending on model.game_state
+
 import gleam/float
 import gleam/int
 import gleam/list
 import gleam/option
 import gleam/string
-import snake_global
 import tiramisu
 import tiramisu/camera
 import tiramisu/geometry
@@ -13,7 +16,8 @@ import tiramisu/scene
 import tiramisu/transform
 import vec/vec3
 
-import model_update.{type Model, GameOver, Running, box_width}
+import model_update.{type Model, GameOver, Running}
+import snake_global.{box_width}
 
 type Color {
   BeuteColor

@@ -1,8 +1,8 @@
+//// Helper functions used by view and by model update for distance calculations
+
 import tiramisu
 
 pub const box_width = 50.0
-
-pub const highscore_key = "Highscore"
 
 pub fn left_border(ctx: tiramisu.Context(String)) -> Float {
   0.0 -. half_vert_calc(ctx)
