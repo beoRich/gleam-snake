@@ -43,3 +43,25 @@ pub type Msg {
 }
 
 pub type FontLoading
+
+pub type Color {
+  BeuteColor
+  SnakeHeadColor
+  SnakeTailColor
+  PrimeColor
+  SecColor
+  BorderColor
+}
+
+pub fn color_hex(color: Color) -> Int {
+  case color {
+    BeuteColor -> 0xfcba03
+    SnakeHeadColor -> 0x34eb4c
+    SnakeTailColor -> 0x42f5b6
+    //red
+    PrimeColor -> 0xeb0933
+    BorderColor -> 0xeb4034
+    // slight Blue
+    SecColor -> 0x34d0eb
+  }
+}

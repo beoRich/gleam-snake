@@ -9,7 +9,7 @@ import tiramisu/scene
 import tiramisu/transform
 import vec/vec3
 
-import snake_types.{type Model, box_width}
+import snake_types.{type Model, box_width, color_hex}
 
 pub fn create_running_game_view(
   model: Model,
@@ -19,14 +19,14 @@ pub fn create_running_game_view(
     geometry.box(width: box_width, height: box_width, depth: 1.0)
   let assert Ok(head_material) =
     material.new()
-    |> material.with_color(0x34eb4c)
+    |> material.with_color(color_hex(snake_types.SnakeHeadColor))
     |> material.with_metalness(0.2)
     |> material.with_roughness(0.9)
     |> material.build()
 
   let assert Ok(beute_material) =
     material.new()
-    |> material.with_color(0xfcba03)
+    |> material.with_color(color_hex(snake_types.BeuteColor))
     |> material.with_metalness(0.2)
     |> material.with_roughness(0.9)
     |> material.build()
@@ -63,7 +63,7 @@ fn tail_elements(model: Model) -> List(scene.Node(String)) {
 
   let assert Ok(tail_material) =
     material.new()
-    |> material.with_color(0x42f5b6)
+    |> material.with_color(color_hex(snake_types.SnakeTailColor))
     |> material.with_metalness(0.2)
     |> material.with_roughness(0.9)
     |> material.build()

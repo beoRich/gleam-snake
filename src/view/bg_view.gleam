@@ -9,14 +9,14 @@ import tiramisu/transform
 import vec/vec3
 
 import snake_global
-import snake_types.{type Model, box_width}
+import snake_types.{type Model, box_width, color_hex}
 
 pub fn create_static_view(
   ctx: tiramisu.Context(String),
 ) -> List(scene.Node(String)) {
   let assert Ok(border_material) =
     material.new()
-    |> material.with_color(0xeb4034)
+    |> material.with_color(color_hex(snake_types.BorderColor))
     |> material.with_metalness(0.2)
     |> material.with_roughness(0.9)
     |> material.build()
@@ -85,7 +85,7 @@ pub fn create_static_view(
 pub fn create_game_over(model: Model, ctx: tiramisu.Context(String)) {
   let assert Ok(game_over_text_material) =
     material.new()
-    |> material.with_color(0xeb0933)
+    |> material.with_color(color_hex(snake_types.PrimeColor))
     |> material.with_metalness(0.0)
     |> material.with_roughness(0.7)
     |> material.build()
@@ -112,10 +112,48 @@ pub fn create_game_over(model: Model, ctx: tiramisu.Context(String)) {
           id: "game over display",
           geometry: game_over_text,
           material: game_over_text_material,
-          transform: transform.at(position: vec3.Vec3(0.0 -. 450.0, 0.0, 0.0)),
+          transform: transform.at(position: vec3.Vec3(
+            0.0 -. 9.0 *. box_width,
+            0.0,
+            0.0,
+          )),
           physics: option.None,
         )
-      [text_scene]
+
+      let assert Ok(restart_hint_text) =
+        geometry.text(
+          text: "Press Enter or left Mouse for restart",
+          font: font,
+          size: 30.0,
+          depth: 0.2,
+          curve_segments: 12,
+          bevel_enabled: True,
+          bevel_thickness: 0.05,
+          bevel_size: 0.02,
+          bevel_offset: 0.0,
+          bevel_segments: 5,
+        )
+
+      let assert Ok(restart_hint_material) =
+        material.new()
+        |> material.with_color(color_hex(snake_types.SecColor))
+        |> material.with_metalness(0.2)
+        |> material.with_roughness(0.9)
+        |> material.build()
+
+      let restart_button_scene =
+        scene.mesh(
+          id: "restartHint",
+          geometry: restart_hint_text,
+          material: restart_hint_material,
+          transform: transform.at(position: vec3.Vec3(
+            0.0 -. 9.0 *. box_width,
+            0.0 -. box_width,
+            0.0,
+          )),
+          physics: option.None,
+        )
+      [text_scene, restart_button_scene]
     }
     _ -> []
   }
@@ -128,7 +166,7 @@ pub fn create_score_display(
 ) -> List(scene.Node(String)) {
   let assert Ok(score_text_material) =
     material.new()
-    |> material.with_color(0x34d0eb)
+    |> material.with_color(color_hex(snake_types.SecColor))
     |> material.with_metalness(0.0)
     |> material.with_roughness(0.7)
     |> material.build()
