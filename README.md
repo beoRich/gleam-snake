@@ -2,7 +2,8 @@
 
 Snake Game
 
-Written with Gleam and Tiramisu
+A simple snake Game written in Gleam with Tiramisu (https://hexdocs.pm/tiramisu/)
+![Alt Text](example_gameplay.gif)
 
 ## Development
 
