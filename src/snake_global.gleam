@@ -1,6 +1,6 @@
 import tiramisu
 
-import snake_types.{box_width}
+pub const box_width = 50.0
 
 pub const highscore_key = "Highscore"
 

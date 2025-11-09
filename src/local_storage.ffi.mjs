@@ -1,4 +1,4 @@
-import { Ok, Error } from "../gleam.mjs";
+import { Ok, Error } from "./gleam.mjs";
 
 // It's often convenient to write FFI functions in a way that constructs or wraps
 // return values in existing, known Gleam values. In Gleam we annotated this FFI

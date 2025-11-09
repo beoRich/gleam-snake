@@ -1,15 +1,15 @@
 import gleam/option
-import model/main_model
+import main_view
+import model_update
 import tiramisu
 import tiramisu/background
-import view/main_view
 
 pub fn main() -> Nil {
   tiramisu.run(
     dimensions: option.None,
     background: background.Color(0x162b1e),
-    init: main_model.init,
-    update: main_model.update,
+    init: model_update.init,
+    update: model_update.update,
     view: main_view.view,
   )
 }
