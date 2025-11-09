@@ -321,10 +321,18 @@ fn parse_direction_from_key(
   ctx: tiramisu.Context(String),
   model: Model,
 ) -> Direction {
-  let is_left = input.is_key_just_pressed(ctx.input, input.ArrowLeft)
-  let is_right = input.is_key_just_pressed(ctx.input, input.ArrowRight)
-  let is_up = input.is_key_just_pressed(ctx.input, input.ArrowUp)
-  let is_down = input.is_key_just_pressed(ctx.input, input.ArrowDown)
+  let is_left =
+    input.is_key_just_pressed(ctx.input, input.ArrowLeft)
+    || input.is_key_just_pressed(ctx.input, input.KeyA)
+  let is_right =
+    input.is_key_just_pressed(ctx.input, input.ArrowRight)
+    || input.is_key_just_pressed(ctx.input, input.KeyD)
+  let is_up =
+    input.is_key_just_pressed(ctx.input, input.ArrowUp)
+    || input.is_key_just_pressed(ctx.input, input.KeyW)
+  let is_down =
+    input.is_key_just_pressed(ctx.input, input.ArrowDown)
+    || input.is_key_just_pressed(ctx.input, input.KeyS)
   case is_left, is_right, is_up, is_down {
     True, _, _, _ -> check_if_new_is_pos(Left, model)
     _, True, _, _ -> check_if_new_is_pos(Right, model)
