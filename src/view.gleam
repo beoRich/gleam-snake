@@ -16,7 +16,7 @@ import tiramisu/scene
 import tiramisu/transform
 import vec/vec3
 
-import model_update.{type Model, GameOver, Running}
+import model.{type Model, GameOver, Running}
 import snake_global.{box_width}
 
 type Color {
