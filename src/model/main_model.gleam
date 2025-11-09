@@ -96,7 +96,7 @@ pub fn update(
   #(updatet_model, effect.tick(Tick), option.None)
 }
 
-@external(javascript, "./main_model.ffi.mjs", "get_localstorage")
+@external(javascript, "./local_storage.ffi.mjs", "get_localstorage")
 fn get_localstorage(_key: String) -> Result(Dynamic, Nil) {
   Error(Nil)
 }

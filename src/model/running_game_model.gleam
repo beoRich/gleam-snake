@@ -274,7 +274,7 @@ fn update_tail_pos(
   }
 }
 
-@external(javascript, "./main_model.ffi.mjs", "set_localstorage")
+@external(javascript, "./local_storage.ffi.mjs", "set_localstorage")
 fn set_localstorage(_key: String, _value: String) -> Nil {
   Nil
 }
