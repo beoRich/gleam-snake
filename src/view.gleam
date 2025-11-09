@@ -161,12 +161,19 @@ pub fn create_game_over(model: Model, ctx: tiramisu.Context(String)) {
     |> material.with_roughness(0.7)
     |> material.build()
   let score_string =
-    string.append("GAME OVER FINAL SCORE: ", int.to_string(model.score))
+    string.append(
+      "GAME OVER FINAL SCORE: ",
+      int.to_string(model.score_info.current_score),
+    )
+  let score_string_new_highscore = case model.score_info.new_high_score {
+    True -> score_string <> " (New Highscore)"
+    False -> score_string
+  }
   let text_elements = case model.maybe_font {
     option.Some(font) -> {
       let assert Ok(game_over_text) =
         geometry.text(
-          text: score_string,
+          text: score_string_new_highscore,
           font: font,
           size: 50.0,
           depth: 0.2,
@@ -241,8 +248,9 @@ fn create_score_display(
     |> material.with_metalness(0.0)
     |> material.with_roughness(0.7)
     |> material.build()
-  let score_string = string.append("Score: ", int.to_string(model.score))
-  let complete_score = case model.highscore {
+  let score_string =
+    string.append("Score: ", int.to_string(model.score_info.current_score))
+  let complete_score = case model.score_info.highscore {
     option.Some(val) ->
       score_string <> " (Highscore: " <> int.to_string(val) <> ")"
     _ -> score_string

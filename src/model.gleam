@@ -28,8 +28,7 @@ pub type Model {
     update_frame: Int,
     game_state: GameState,
     maybe_font: option.Option(asset.Font),
-    score: Int,
-    highscore: option.Option(Int),
+    score_info: ScoreInfo,
   )
 }
 
@@ -37,6 +36,14 @@ pub type GameState {
   Running
   NotStarted
   GameOver
+}
+
+pub type ScoreInfo {
+  ScoreInfo(
+    current_score: Int,
+    highscore: option.Option(Int),
+    new_high_score: Bool,
+  )
 }
 
 pub type BoxData {
@@ -98,8 +105,11 @@ fn init_model(
     update_frame: 0,
     game_state: Running,
     maybe_font: maybe_font,
-    score: 0,
-    highscore: highscore,
+    score_info: ScoreInfo(
+      current_score: 0,
+      highscore: highscore,
+      new_high_score: False,
+    ),
   )
 }
 
@@ -118,7 +128,7 @@ pub fn update(
             || input.is_key_just_pressed(ctx.input, input.Enter)
           {
             True -> {
-              init_model(model.highscore, model.maybe_font, ctx)
+              init_model(model.score_info.highscore, model.maybe_font, ctx)
             }
             False -> model
           }
@@ -143,24 +153,29 @@ fn update_running_model(model: Model, ctx: tiramisu.Context(String)) -> Model {
   let is_game_over = check_game_over(model, ctx)
   case is_game_over {
     True -> {
-      let score = model.score
-      let pot_new_highscore = case model.highscore {
+      let score = model.score_info.current_score
+      let pot_new_highscore = case model.score_info.highscore {
         option.Some(highscore_val) ->
           case score > highscore_val {
             True -> {
               set_localstorage(highscore_key, int.to_string(score))
 
-              score
+              ScoreInfo(
+                ..model.score_info,
+                highscore: option.Some(score),
+                new_high_score: True,
+              )
             }
-            _ -> highscore_val
+            _ -> model.score_info
           }
-        _ -> score
+        _ ->
+          ScoreInfo(
+            ..model.score_info,
+            highscore: option.Some(score),
+            new_high_score: True,
+          )
       }
-      Model(
-        ..model,
-        game_state: GameOver,
-        highscore: option.Some(pot_new_highscore),
-      )
+      Model(..model, game_state: GameOver, score_info: pot_new_highscore)
     }
     False -> update_snake_beute(model, ctx)
   }
@@ -232,8 +247,8 @@ fn update_snake_beute(model: Model, ctx: tiramisu.Context(String)) -> Model {
   let is_grefressen = is_gefressen_cal(model)
 
   let new_score = case is_grefressen {
-    True -> model.score + 1
-    False -> model.score
+    True -> model.score_info.current_score + 1
+    False -> model.score_info.current_score
   }
 
   let new_beute_pos = case is_grefressen {
@@ -274,7 +289,7 @@ fn update_snake_beute(model: Model, ctx: tiramisu.Context(String)) -> Model {
     beute_pos: new_beute_pos,
     update_frame: { model.update_frame + 1 } % 8,
     game_state: Running,
-    score: new_score,
+    score_info: ScoreInfo(..model.score_info, current_score: new_score),
   )
 }
 
