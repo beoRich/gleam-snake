@@ -73,15 +73,12 @@ pub fn view(
     list.append(init_elements, create_static_view(ctx))
     |> list.append(create_score_display(model, ctx))
 
-  case model.game_state {
-    Running -> {
-      list.append(base_elements, create_running_game_view(model, ctx))
-    }
-    GameOver -> {
-      list.append(base_elements, create_game_over(model, ctx))
-    }
-    _ -> base_elements
-  }
+  base_elements
+  |> list.append(case model.game_state {
+    Running -> create_running_game_view(model, ctx)
+    GameOver -> create_game_over(model, ctx)
+    _ -> []
+  })
 }
 
 fn create_static_view(ctx: tiramisu.Context(String)) -> List(scene.Node(String)) {
@@ -161,10 +158,7 @@ pub fn create_game_over(model: Model, ctx: tiramisu.Context(String)) {
     |> material.with_roughness(0.7)
     |> material.build()
   let score_string =
-    string.append(
-      "GAME OVER FINAL SCORE: ",
-      int.to_string(model.score_info.current_score),
-    )
+    "GAME OVER FINAL SCORE: " <> int.to_string(model.score_info.current_score)
   let score_string_new_highscore = case model.score_info.new_high_score {
     True -> score_string <> " (New Highscore)"
     False -> score_string
@@ -248,8 +242,7 @@ fn create_score_display(
     |> material.with_metalness(0.0)
     |> material.with_roughness(0.7)
     |> material.build()
-  let score_string =
-    string.append("Score: ", int.to_string(model.score_info.current_score))
+  let score_string = "Score: " <> int.to_string(model.score_info.current_score)
   let complete_score = case model.score_info.highscore {
     option.Some(val) ->
       score_string <> " (Highscore: " <> int.to_string(val) <> ")"

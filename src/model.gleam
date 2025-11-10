@@ -17,7 +17,11 @@ import tiramisu/input
 
 import tiramisu
 
-pub const highscore_key = "Highscore"
+// the key the highscore is stored in the local storage
+const highscore_key = "Highscore"
+
+// draw every <draw_frame>: low -> fast movement, high -> slow movement
+const draw_frame = 8
 
 pub type Model {
   Model(
@@ -62,8 +66,6 @@ pub type Msg {
   FontLoadFailed(asset.LoadError)
   Tick
 }
-
-pub type FontLoading
 
 pub fn init(
   ctx: tiramisu.Context(String),
@@ -123,7 +125,7 @@ pub fn update(
       case model.game_state {
         Running -> update_running_model(model, ctx)
         GameOver -> {
-          let maybe_reset_model = case
+          case
             input.is_left_button_just_pressed(ctx.input)
             || input.is_key_just_pressed(ctx.input, input.Enter)
           {
@@ -132,8 +134,6 @@ pub fn update(
             }
             False -> model
           }
-
-          maybe_reset_model
         }
         _ -> model
       }
@@ -150,8 +150,7 @@ pub fn update(
 }
 
 fn update_running_model(model: Model, ctx: tiramisu.Context(String)) -> Model {
-  let is_game_over = check_game_over(model, ctx)
-  case is_game_over {
+  case check_game_over(model, ctx) {
     True -> {
       let score = model.score_info.current_score
       let pot_new_highscore = case model.score_info.highscore {
@@ -191,12 +190,6 @@ fn check_game_over(model: Model, ctx: tiramisu.Context(String)) -> Bool {
     || hy <. snake_global.down_border(ctx)
 
   let own_tail_check = list.any(model.tail, fn(a) { a.x == hx && a.y == hy })
-  case own_tail_check {
-    True -> echo "Game Over due to own tail crash"
-    _ -> {
-      ""
-    }
-  }
   border_check || own_tail_check
 }
 
@@ -205,19 +198,19 @@ fn calculate_new_beute_pos(
   safety: Int,
   ctx: tiramisu.Context(String),
 ) -> #(Float, Float) {
-  let cand = random_pos(ctx)
-  let test_function = spawn_too_close(_, cand)
-  let too_close =
-    list.append([model.head], model.tail) |> list.any(test_function)
-  case too_close && safety < 5 {
+  let new_pos_candidate = random_pos(ctx)
+  let is_too_close =
+    list.append([model.head], model.tail)
+    |> list.any(spawn_too_close(_, new_pos_candidate))
+  case is_too_close && safety < 5 {
     True -> {
       calculate_new_beute_pos(model, safety + 1, ctx)
     }
-    False -> cand
+    False -> new_pos_candidate
   }
 }
 
-pub fn random_pos(ctx: tiramisu.Context(String)) -> #(Float, Float) {
+fn random_pos(ctx: tiramisu.Context(String)) -> #(Float, Float) {
   let abs_x = ctx.canvas_height -. 2.0 *. box_width
   let rand_x = float.round(abs_x /. box_width) - 1
 
@@ -287,7 +280,7 @@ fn update_snake_beute(model: Model, ctx: tiramisu.Context(String)) -> Model {
     head: BoxData(x: new_x, y: new_y, direction: new_direction),
     tail: new_tail,
     beute_pos: new_beute_pos,
-    update_frame: { model.update_frame + 1 } % 8,
+    update_frame: { model.update_frame + 1 } % draw_frame,
     game_state: Running,
     score_info: ScoreInfo(..model.score_info, current_score: new_score),
   )
@@ -334,42 +327,44 @@ fn parse_direction_from_key(
     input.is_key_just_pressed(ctx.input, input.ArrowDown)
     || input.is_key_just_pressed(ctx.input, input.KeyS)
   case is_left, is_right, is_up, is_down {
-    True, _, _, _ -> check_if_new_is_pos(Left, model)
-    _, True, _, _ -> check_if_new_is_pos(Right, model)
-    _, _, True, _ -> check_if_new_is_pos(Up, model)
-    _, _, _, True -> check_if_new_is_pos(Down, model)
+    True, _, _, _ -> check_new_direction_is_possible(Left, model)
+    _, True, _, _ -> check_new_direction_is_possible(Right, model)
+    _, _, True, _ -> check_new_direction_is_possible(Up, model)
+    _, _, _, True -> check_new_direction_is_possible(Down, model)
     _, _, _, _ -> model.head.direction
   }
 }
 
-fn check_if_new_is_pos(new_direction: Direction, model: Model) -> Direction {
-  case list.is_empty(model.tail) {
-    True -> new_direction
-    _ -> {
-      let assert Ok(first_tail) = list.first(model.tail)
+fn check_new_direction_is_possible(
+  new_direction: Direction,
+  model: Model,
+) -> Direction {
+  case model.tail {
+    [] -> new_direction
+    [first_tail, ..] -> {
       let head = model.head
       let old_direction = head.direction
       case new_direction {
         Right ->
-          if_true_old_else(
+          if_true_old_else_new(
             first_tail.x >. head.x && first_tail.y == head.y,
             old_direction,
             new_direction,
           )
         Left ->
-          if_true_old_else(
+          if_true_old_else_new(
             first_tail.x <. head.x && first_tail.y == head.y,
             old_direction,
             new_direction,
           )
         Up ->
-          if_true_old_else(
+          if_true_old_else_new(
             first_tail.y >. head.y && first_tail.x == head.x,
             old_direction,
             new_direction,
           )
         Down ->
-          if_true_old_else(
+          if_true_old_else_new(
             first_tail.y <. head.y && first_tail.x == head.x,
             old_direction,
             new_direction,
@@ -380,19 +375,19 @@ fn check_if_new_is_pos(new_direction: Direction, model: Model) -> Direction {
   }
 }
 
-fn if_true_old_else(
-  is_true: Bool,
+fn if_true_old_else_new(
+  check: Bool,
   old_direction: Direction,
   new_direction: Direction,
 ) -> Direction {
-  case is_true {
+  case check {
     True -> old_direction
     False -> new_direction
   }
 }
 
 fn is_gefressen_cal(model: Model) -> Bool {
-  let threshold = 30.5
+  let threshold = box_width /. 10.0
   let BoxData(hx, hy, _) = model.head
   let #(bx, by) = model.beute_pos
   float.absolute_value(hx -. bx) <. threshold
@@ -404,18 +399,15 @@ fn update_tail_pos(
   tail_pos: List(BoxData),
   update_frame: Int,
 ) -> List(BoxData) {
-  let update_movement = update_frame == 0
-  let new_tail = case tail_pos {
-    [] -> tail_pos
-    [_] -> [head_pos]
-    _ ->
-      list.append(
-        [head_pos],
-        list.reverse(tail_pos) |> list.drop(1) |> list.reverse,
-      )
-  }
-  case update_movement {
-    True -> new_tail
+  case update_frame == 0 {
+    True -> {
+      case tail_pos {
+        [] -> tail_pos
+        _ ->
+          [head_pos]
+          |> list.append(list.reverse(tail_pos) |> list.drop(1) |> list.reverse)
+      }
+    }
     False -> tail_pos
   }
 }
@@ -428,13 +420,4 @@ fn set_localstorage(_key: String, _value: String) -> Nil {
 @external(javascript, "./local_storage.ffi.mjs", "get_localstorage")
 fn get_localstorage(_key: String) -> Result(Dynamic, Nil) {
   Error(Nil)
-}
-
-fn highscore_decoder(json_string: String) -> Result(Int, json.DecodeError) {
-  let highscore_decoder = {
-    use highscore <- decode.field("Highscore", decode.int)
-    decode.success(highscore)
-  }
-
-  json.parse(from: json_string, using: highscore_decoder)
 }
