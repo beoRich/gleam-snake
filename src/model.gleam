@@ -143,9 +143,7 @@ pub fn update(
       echo err
       model
     }
-    // handle error, maybe fallback
   }
-
   #(updatet_model, effect.tick(Tick), option.None)
 }
 
@@ -221,11 +219,10 @@ fn random_pos(ctx: tiramisu.Context(String)) -> #(Float, Float) {
     -. 2.0
     *. box_width
   let rand_y = float.round(abs_y /. box_width) - 1
-  let cand = #(
+  #(
     int.to_float(int.random(rand_x) - rand_x / 2) *. box_width,
     int.to_float(int.random(rand_y) - rand_y / 2) *. box_width,
   )
-  cand
 }
 
 fn spawn_too_close(snake_element: BoxData, cand: #(Float, Float)) -> Bool {
